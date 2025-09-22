@@ -1,0 +1,48 @@
+import math
+
+def expression(x):
+    z = (1 - 2 * math.sin(x) ** 2) / (1 + math.sin(x) ** 2)
+    return z
+
+def sum_even(x, y):
+    s = 0
+    for i in range(x, y + 1):
+        if i % 2 == 0:
+            s += i
+    return s
+
+x = float(input("Введіть значення x у радіанах: "))
+print("Значення виразу z =", expression(x))
+
+x1 = int(input("Введіть від якого числа x рахувати суму парних: "))
+y1 = int(input("Введіть до якого числа y рахувати суму парних: "))
+
+while x1 > y1:
+    print("Помилка: x не може бути більшим за y")
+    x1 = int(input("Введіть від якого числа x: "))
+    y1 = int(input("Введіть до якого числа y: "))
+
+print("Сума всіх парних чисел від x до y =", sum_even(x1, y1))
+
+
+
+
+from mod import sum_even
+
+x1 = int(input("Enter the starting number x: "))
+y1 = int(input("Enter the ending number y: "))
+
+while x1 > y1:
+    print("Error: x cannot be greater than y")
+    x1 = int(input("Enter the starting number x again: "))
+    y1 = int(input("Enter the ending number y again: "))
+
+print("The sum of all even numbers from x to y =", sum_even(x1, y1))
+
+
+def sum_even(x, y):
+    s = 0
+    for i in range(x, y + 1):
+        if i % 2 == 0:
+            s += i
+    return s
