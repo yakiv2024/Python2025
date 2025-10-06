@@ -1,0 +1,77 @@
+n = int(input("Введіть довжину масиву: "))
+arr = []
+
+print("Введіть елементи масиву:")
+for i in range(n):
+    num = int(input(f"Елемент {i+1}: "))
+    arr.append(num)
+
+print("Від’ємні елементи у зворотному порядку:")
+for x in arr[::-1]:
+    if x < 0:
+        print(x, end=' ')
+
+
+
+
+n = 7
+A = [[j - (n - 1 - i) for j in range(n)] for i in range(n)]
+
+for row in A:
+    print(" ".join(f"{x:3d}" for x in row))
+
+
+
+
+def insert(lst, value):
+    i = 1  
+    while i <= len(lst):
+        lst.insert(i, value)
+        i += 2 + 1  
+    return lst
+lst = list(map(int, input("Введіть елементи списку через пробіл: ").split()))
+value = int(input("Введіть значення для вставки: "))
+
+result = insert(lst, value)
+
+print("Результат:", result)
+
+
+
+
+def min_max(lst):
+    if not lst:
+        return lst
+    min_index = lst.index(min(lst))
+    max_index = lst.index(max(lst))
+    
+    lst[min_index], lst[max_index] = lst[max_index], lst[min_index]
+    
+    return lst
+lst = list(map(int, input("Введіть елементи списку через пробіл: ").split()))
+
+print("Початковий список:", lst)
+
+result = min_max(lst)
+
+print("Результат:", result)
+
+
+
+
+
+
+def unique_letters(word):
+    result = []
+    seen = set()
+
+    for char in word:
+        if char not in seen:
+            seen.add(char)
+            result.append(char)
+
+    return ''.join(result)
+
+word = input("Введіть слово з латинських літер: ")
+
+print("Унікальні символи у вихідному порядку:", unique_letters(word))
