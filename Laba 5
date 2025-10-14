@@ -43,7 +43,12 @@ def main():
         "BMW 320": [12000, 8],
         "Toyota Corolla": [9000, 10],
         "Honda Civic": [11000, 7],
-        "Ford Focus": [8000, 4]
+        "Ford Focus": [8000, 4],
+        "Mazda 6": [9500, 9],
+        "Nissan Qashqai": [13000, 6],
+        "Volkswagen Passat": [14000, 11],
+        "Hyundai Elantra": [10000, 8],
+        "Kia Ceed": [8500, 3]
     }
 
     while True:
