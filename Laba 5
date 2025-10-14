@@ -1,0 +1,80 @@
+def Print(cars):  # словник
+    print("\nДані про автомобілі:")
+    for model in cars:
+        print(model, " - ", cars[model])
+
+
+def add(cars, key, data):  # Додавання нового запису
+    cars[key] = data
+    print("Додано:", key)
+
+
+def Delete(cars, key):  # Видалення запису
+    try:
+        del cars[key]
+        print("Видалено:", key)
+    except KeyError:
+        print("Помилка: такої моделі немає у словнику.")
+
+
+def print_sort(cars):  # Виведення відсортованого словника
+    print("\nВідсортований словник:")
+    for k in sorted(cars):
+        print(k, " - ", cars[k])
+
+
+def average_old_cars(cars):  # Середнє за 6 років
+    total = 0
+    count = 0
+    for model in cars:
+        price, age = cars[model]
+        if age > 6:
+            total += price
+            count += 1
+    if count > 0:
+        print(f"\nСередня вартість автомобілів старших за 6 років: {total / count:.2f} $")
+    else:
+        print("\nНемає автомобілів старших за 6 років.")
+
+
+def main():
+    cars = {
+        "Audi A4": [15000, 5],
+        "BMW 320": [12000, 8],
+        "Toyota Corolla": [9000, 10],
+        "Honda Civic": [11000, 7],
+        "Ford Focus": [8000, 4]
+    }
+
+    while True:
+        print("1 - Вивести всі записи")
+        print("2 - Додати новий запис")
+        print("3 - Видалити запис")
+        print("4 - Вивести відсортований словник")
+        print("5 - Середня вартість авто старших за 6 років")
+        print("0 - Якщо хочете вийти з програми")
+        choice = input("Ваш вибір: ")
+
+        if choice == "1":
+            Print(cars)
+        elif choice == "2":
+            try:
+                model = input("Введіть модель: ")
+                price = float(input("Введіть вартість в $: "))
+                age = int(input("Введіть вік: "))
+                add(cars, model, [price, age])
+            except ValueError:
+                print("Помилка введення. Введіть числові дані для вартості та віку.")
+        elif choice == "3":
+            key = input("Введіть модель для видалення: ")
+            Delete(cars, key)
+        elif choice == "4":
+            print_sort(cars)
+        elif choice == "5":
+            average_old_cars(cars)
+        elif choice == '0':
+            print("Вихід з програми")
+            break
+        else:
+            print("Не правильний вибір. Спробуйте ще раз.")
+main()
