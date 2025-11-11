@@ -2,27 +2,32 @@ import csv
 import os
 
 input_file = "Data.csv"
-output_file = "Life_expectancy_results.csv"
+output_file = "results.csv"
 
 try:
     with open(input_file, "r", encoding="utf-8") as csvfile:
         reader = csv.DictReader(csvfile)
+        found = False
+
         for row in reader:
             if row["Country Name"].strip().lower() == "ukraine":
+                found = True
                 print("Life expectancy at birth, total (years) for Ukraine (1991–2019):\n")
                 values = {}
+
                 for year in range(1991, 2020):
                     column = f"{year} [YR{year}]"
                     val_str = row.get(column, "").strip()
-                    if val_str != "":
+                    if val_str:
                         try:
                             val = float(val_str)
                             values[year] = val
                             print(f"{year}: {val}")
                         except ValueError:
                             continue
+
                 if not values:
-                    print("\n No numeric data found for Ukraine.")
+                    print("\nNo numeric data found for Ukraine.")
                 else:
                     min_year = min(values, key=values.get)
                     max_year = max(values, key=values.get)
@@ -34,24 +39,34 @@ try:
 
                     print("\nHighest life expectancy:")
                     print(f"{max_year}: {max_value}")
-                    with open(output_file, "w", newline="", encoding="utf-8") as out_csv:
-                        writer = csv.writer(out_csv, delimiter=";")
-                        writer.writerow(["Year", "Life expectancy (years)"])
-                        writer.writerow([min_year, min_value])
-                        writer.writerow([max_year, max_value])
 
-                    print(f"\n Results saved to file: {output_file}")
+                    try:
+                        with open(output_file, "w", newline="", encoding="utf-8") as out_csv:
+                            writer = csv.writer(out_csv, delimiter=";")
+                            writer.writerow(["Year", "Life expectancy (years)"])
+                            writer.writerow([min_year, min_value])
+                            writer.writerow([max_year, max_value])
+                        print(f"\nResults saved to file: {output_file}")
+                    except PermissionError:
+                        print("\nПомилка неможливо записати у файл файл відкрито або захищено")
+                    except Exception as e:
+                        print(f"\nПомилка запису у файл: {e}")
                 break
-        else:
-            print("Ukraine not found in file!")
+
+        if not found:
+            print("Ukraine not found in file")
 
 except FileNotFoundError:
-    print("File Data.csv not found!")
+    print("Помилка файл Data.csv не знайдено")
+except PermissionError:
+    print("Помилка неможливо відкрити файл Data.csv немає доступу")
 except Exception as e:
-    print(f"Error: {e}")
+    print(f"Інша помилка при читанні файлу: {e}")
+
 
 
 import json
+import os
 
 cars = [
     {"Модель": "Toyota Corolla", "Ціна": 12000, "Вік": 5},
@@ -66,11 +81,15 @@ cars = [
     {"Модель": "Volkswagen Golf", "Ціна": 13000, "Вік": 5}
 ]
 
-# Запис у файл
-jsonData = json.dumps(cars, ensure_ascii=False, indent=4)
-with open("cars.json", "wt") as file:
-    file.write(jsonData)
-file.close()
+# створюємо початковий файл
+try:
+    jsonData = json.dumps(cars, ensure_ascii=False, indent=4)
+    with open("cars.json", "wt", encoding="utf-8") as file:
+        file.write(jsonData)
+except PermissionError:
+    print("Помилка неможливо записати у файл cars.json доступ заборонено.")
+except Exception as e:
+    print(f"Інша помилка при створенні файлу cars.json {e}")
 
 while True:
     print("\nОберіть дію:")
@@ -81,40 +100,69 @@ while True:
     print("5 - Пошук автомобіля за одним із полів")
     print("6 - Вийти")
 
-    x = int(input("Ваш вибір: "))
+    try:
+        x = int(input("Ваш вибір: "))
+    except ValueError:
+        print("Помилка введіть число від 1 до 6.")
+        continue
 
     if x == 1:
-        # Додавання нового авто
-        with open("cars.json", "rt") as file:
-            cars = json.load(file)
+        # додавання нового авто
+        try:
+            with open("cars.json", "rt", encoding="utf-8") as file:
+                cars = json.load(file)
+        except FileNotFoundError:
+            print("Помилка файл cars.json не знайдено.")
+            continue
+        except json.JSONDecodeError:
+            print("Помилка файл cars.json пошкоджено.")
+            continue
 
         print("Додавання нового автомобіля:")
         model = input("Модель: ")
-        price = float(input("Ціна: "))
-        age = int(input("Вік : "))
+        try:
+            price = float(input("Ціна: "))
+            age = int(input("Вік : "))
+        except ValueError:
+            print("Помилка некоректне введення чисел.")
+            continue
 
         cars.append({"Модель": model, "Ціна": price, "Вік": age})
 
-        with open("cars.json", "wt") as file:
-            json.dump(cars, file, ensure_ascii=False, indent=4)
-
-        print("Автомобіль успішно додано")
+        try:
+            with open("cars.json", "wt", encoding="utf-8") as file:
+                json.dump(cars, file, ensure_ascii=False, indent=4)
+            print("Автомобіль успішно додано.")
+        except PermissionError:
+            print("Помилка файл cars.json відкрито в іншій програмі.")
+        except Exception as e:
+            print(f"Помилка запису у файл cars.json: {e}")
 
     elif x == 2:
-        # Перегляд усіх авто
-        with open("cars.json", "rt") as file:
-            cars = json.load(file)
-            print("\n Список автомобілів ")
-            for c in cars:
-                print(c)
+        # перегляд усіх авто
+        try:
+            with open("cars.json", "rt", encoding="utf-8") as file:
+                cars = json.load(file)
+                print("\nСписок автомобілів:")
+                for c in cars:
+                    print(c)
+        except FileNotFoundError:
+            print("Помилка: файл cars.json не знайдено.")
+        except json.JSONDecodeError:
+            print("Помилка: файл cars.json пошкоджено.")
+        except Exception as e:
+            print(f"Інша помилка при читанні файлу: {e}")
 
     elif x == 3:
-        # Видалення автомобіля
-        with open("cars.json", "rt") as file:
-            cars = json.load(file)
+        # видалення авто
+        try:
+            with open("cars.json", "rt", encoding="utf-8") as file:
+                cars = json.load(file)
+        except Exception as e:
+            print(f"Помилка відкриття файлу: {e}")
+            continue
 
         model_to_delete = input("Введіть модель автомобіля для видалення: ")
-
         found = False
         for car in cars:
             if car["Модель"].lower() == model_to_delete.lower():
@@ -123,67 +171,94 @@ while True:
                 break
 
         if found:
-            with open("cars.json", "wt") as file:
-                json.dump(cars, file, ensure_ascii=False, indent=4)
-            print(f"Автомобіль '{model_to_delete}' успішно видалено")
+            try:
+                with open("cars.json", "wt", encoding="utf-8") as file:
+                    json.dump(cars, file, ensure_ascii=False, indent=4)
+                print(f"Автомобіль '{model_to_delete}' успішно видалено.")
+            except Exception as e:
+                print(f"Помилка запису у файл: {e}")
         else:
-            print("Такої моделі не знайдено у файлі")
+            print("Такої моделі не знайдено у файлі.")
 
     elif x == 4:
-        # Обчислення середньої ціни авто старших за 6 років
-        with open("cars.json", "rt") as file:
-            cars = json.load(file)
+        # середня ціна старших за 6 років
+        try:
+            with open("cars.json", "rt", encoding="utf-8") as file:
+                cars = json.load(file)
+        except Exception as e:
+            print(f"Помилка відкриття файлу: {e}")
+            continue
 
         old_cars = [car["Ціна"] for car in cars if car["Вік"] > 6]
-        if len(old_cars) > 0:
+        if old_cars:
             avg_price = sum(old_cars) / len(old_cars)
             print(f"Середня ціна автомобілів старших за 6 років: {avg_price:.2f} $")
 
-            result = {"Середня ціна автомобілів старших за 6 років": avg_price}
-            with open("result12.json", "wt") as file:
-                json.dump(result, file, ensure_ascii=False, indent=4)
-            print("Результат збережено у 'result12.json'")
+            try:
+                with open("result12.json", "wt", encoding="utf-8") as file:
+                    json.dump({"Середня ціна автомобілів старших за 6 років": avg_price},
+                              file, ensure_ascii=False, indent=4)
+                print("Результат збережено у 'result12.json'.")
+            except Exception as e:
+                print(f"Помилка запису результатів: {e}")
         else:
             print("Автомобілів старших за 6 років не знайдено.")
 
     elif x == 5:
-        # Пошук автомобіля
-        with open("cars.json", "rt") as file:
-            cars = json.load(file)
+        # пошук авто
+        try:
+            with open("cars.json", "rt", encoding="utf-8") as file:
+                cars = json.load(file)
+        except Exception as e:
+            print(f"Помилка відкриття файлу: {e}")
+            continue
 
         print("\nПошук за полем:")
         print("1 - Модель")
         print("2 - Ціна")
         print("3 - Вік")
-        choice = int(input("Ваш вибір: "))
+
+        try:
+            choice = int(input("Ваш вибір: "))
+        except ValueError:
+            print("Помилка введіть число 1, 2 або 3.")
+            continue
 
         found = []
         if choice == 1:
             model = input("Введіть назву моделі: ").lower()
             found = [c for c in cars if model in c["Модель"].lower()]
         elif choice == 2:
-            price = float(input("Введіть ціну: "))
-            found = [c for c in cars if c["Ціна"] == price]
+            try:
+                price = float(input("Введіть ціну: "))
+                found = [c for c in cars if c["Ціна"] == price]
+            except ValueError:
+                print("Помилка введіть коректну ціну.")
+                continue
         elif choice == 3:
-            age = int(input("Введіть вік: "))
-            found = [c for c in cars if c["Вік"] == age]
+            try:
+                age = int(input("Введіть вік: "))
+                found = [c for c in cars if c["Вік"] == age]
+            except ValueError:
+                print("Помилка введіть коректний вік")
+                continue
         else:
-            print("Невірний вибір поля.")
+            print("Невірний вибір поля")
             continue
 
         if found:
-            print("\Знайдено такі автомобілі:")
+            print("\nЗнайдено такі автомобілі:")
             for c in found:
                 print(c)
         else:
             print("Автомобілів за заданим критерієм не знайдено.")
 
     elif x == 6:
-        print("Завершення роботи програми.")
-        quit(0)
-
+        print("Завершення роботи програми")
+        break  
     else:
-        print("Невірний вибір спробуйте ще раз")
+        print("Невірний вибір. Спробуйте ще раз.")
+
 
 
 
