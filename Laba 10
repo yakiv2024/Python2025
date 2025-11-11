@@ -1,0 +1,158 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
+x = np.linspace(0.1, 8, 500)  
+y = 5 * np.sin(10*x) * np.sin(3*x) / (x**x)
+
+plt.plot(x, y, color='purple', linewidth=4, linestyle='-', label='Y(x)=5*sin(10x)*sin(3x)/(x^x)')
+plt.title('Графік функції Y(x)=5*sin(10x)*sin(3x)/(x^x)', fontsize=14)
+plt.xlabel('x', fontsize=12, color='blue')
+plt.ylabel('Y(x)', fontsize=11, color='blue')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+
+import matplotlib.pyplot as plt
+import ipywidgets as widgets
+from IPython.display import display
+import pandas as pd
+
+try:
+    data = pd.read_csv('data.csv')
+
+    if data.empty:
+        raise ValueError(" Файл 'data.csv' порожній.")
+    if not {'Year', 'Ukraine', 'USA'}.issubset(data.columns):
+        raise ValueError(" У файлі 'data.csv' відсутні необхідні стовпці: Year, Ukraine, USA.")
+
+    data['Year'] = pd.to_numeric(data['Year'], errors='coerce')
+    data['Ukraine'] = pd.to_numeric(data['Ukraine'], errors='coerce')
+    data['USA'] = pd.to_numeric(data['USA'], errors='coerce')
+
+    if data[['Year', 'Ukraine', 'USA']].isnull().values.any():
+        print(" Увага! Деякі значення некоректні та були пропущені.")
+        data = data.dropna(subset=['Year', 'Ukraine', 'USA'])
+
+    if (data[['Ukraine', 'USA']] <= 0).any().any():
+        print(" Виявлено від’ємні або нульові значення у даних. Вони будуть видалені.")
+        data = data[(data['Ukraine'] > 0) & (data['USA'] > 0)]
+
+    if data['Year'].duplicated().any():
+        print(" Увага виявлено повторювані роки. Вони будуть видалені.")
+        data = data.drop_duplicates(subset=['Year'])
+
+    if not data['Year'].is_monotonic_increasing:
+        print(" Роки не впорядковані дані будуть відсортовані за роком.")
+        data = data.sort_values(by='Year')
+
+    print(" Дані успішно зчитано та перевірено!")
+
+except FileNotFoundError:
+    print(" Файл 'data.csv' не знайдено")
+    data = pd.DataFrame(columns=['Year', 'Ukraine', 'USA'])
+
+except pd.errors.EmptyDataError:
+    print(" Файл 'data.csv' порожній або пошкоджений.")
+    data = pd.DataFrame(columns=['Year', 'Ukraine', 'USA'])
+
+except pd.errors.ParserError:
+    print(" Помилка  CSV. Перевір форматування файлу.")
+    data = pd.DataFrame(columns=['Year', 'Ukraine', 'USA'])
+
+except ValueError as e:
+    print(e)
+    data = pd.DataFrame(columns=['Year', 'Ukraine', 'USA'])
+
+if not data.empty:
+    years = data['Year'].tolist()
+    ukraine = data['Ukraine'].tolist()
+    usa = data['USA'].tolist()
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(years, ukraine, marker='o', linewidth=2, label='Україна')
+    plt.plot(years, usa, marker='s', linewidth=2, label='США')
+    plt.title('Children out of school, primary (2003–2022)', fontsize=14)
+    plt.xlabel('Рік', fontsize=12)
+    plt.ylabel('Кількість дітей', fontsize=12)
+    plt.grid(True, linestyle='--', alpha=0.7)
+    plt.legend(fontsize=12)
+    plt.tight_layout()
+    plt.show()
+
+    def plot_country(country):
+        if country == "Україна":
+            data_values = ukraine
+        else:
+            data_values = usa
+
+        plt.figure(figsize=(10, 6))
+        bars = plt.bar(years, data_values, color='cornflowerblue', edgecolor='black')
+        plt.title(f'Children out of school, primary — {country} (2003–2022)', fontsize=14)
+        plt.xlabel('Рік', fontsize=12)
+        plt.ylabel('Кількість дітей', fontsize=12)
+        plt.grid(axis='y', linestyle='--', alpha=0.7)
+
+        for bar in bars:
+            plt.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 2000,
+                     f'{int(bar.get_height()/1000)}k', ha='center', va='bottom', fontsize=9)
+        plt.tight_layout()
+        plt.show()
+#Випадний список
+    dropdown = widgets.Dropdown(
+        options=["Україна", "США"],
+        value="Україна",
+        description="Країна:"
+    )
+
+    display(widgets.interactive(plot_country, country=dropdown))
+
+else:
+    print(" Графіки не побудовано бо дані відсутні або некоректні")
+
+
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+cars = {
+    "Toyota Corolla": 12000,
+    "Honda Civic": 9000,
+    "Ford Focus": 8500,
+    "BMW 320i": 18000,
+    "Audi A4": 21000,
+    "Skoda Octavia": 11000,
+    "Mazda 3": 9500,
+    "Hyundai Elantra": 10500,
+    "Kia Rio": 7500,
+    "Volkswagen Golf": 13000
+}
+
+prices = list(cars.values())
+models = list(cars.keys())
+
+def func(pct, allvals):
+    absolute = int(np.round(pct/100.*np.sum(allvals)))
+    return f"{pct:.1f}%\n(${absolute})"
+
+fig, ax = plt.subplots(figsize=(8, 5), subplot_kw=dict(aspect="equal"))
+
+wedges, texts, autotexts = ax.pie(
+    prices,
+    autopct=lambda pct: func(pct, prices),
+    textprops=dict(color="white"),
+    startangle=90,
+    shadow=True
+)
+
+ax.legend(
+    wedges, models,
+    title="Марки авто",
+    loc="center left",
+    bbox_to_anchor=(1, 0, 0.5, 1)
+)
+
+plt.setp(autotexts, size=8, weight="bold")
+ax.set_title("Частка вартості автомобілів різних марок")
+
+plt.show()
