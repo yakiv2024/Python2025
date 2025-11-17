@@ -1,0 +1,170 @@
+import pandas as pd
+
+# Словник автомобілів ключ - модель, значення - ціна, вік
+cars = {
+    "Audi A4": [15000, 5],
+    "BMW 320": [12000, 8],
+    "Toyota Corolla": [9000, 10],
+    "Honda Civic": [11000, 7],
+    "Ford Focus": [8000, 4],
+    "Mazda 6": [9500, 9],
+    "Nissan Qashqai": [13000, 6],
+    "Volkswagen Passat": [14000, 11],
+    "Hyundai Elantra": [10000, 8],
+    "Kia Ceed": [8500, 3]
+}
+# Виведення вмісту словника
+print("Вміст словника автомобілів:")
+for model, values in cars.items():
+    print(f"{model}: Price = {values[0]}, Age = {values[1]}")
+# Перетворення словника на DataFrame
+df = pd.DataFrame(cars, index=['Price', 'Age']).T  # для транспонування
+df.index.name = 'Model'
+
+# Виведення вмісту DataFrame
+print("DataFrame автомобілів:")
+print(df)
+# Перші 3 рядки
+print("\nПерші 3 рядки:")
+print(df.head(3))
+# Типи даних
+print("\nТипи даних:")
+print(df.dtypes)
+
+# Розмір DataFrame
+print("\nРозмір DataFrame рядки, стовпці:")
+print(df.shape)
+# Описова статистика
+print("\nОписова статистика:")
+print(df.describe())
+
+# Додавання нового стовпця: наприклад, "Total Value" = Price * Age
+df['Total Value'] = df['Price'] * df['Age']
+
+# Фільтрація автомобілі з ціною понад 10000
+expensive_cars = df[df['Price'] > 10000]
+print("\nАвтомобілі з ціною понад 10000:")
+print(expensive_cars)
+# Сортування за спаданням ціни
+sorted_by_price = df.sort_values(by='Price', ascending=False)
+print("\nСортування за спаданням ціни:")
+print(sorted_by_price)
+
+# Середній вік автомобілів
+average_age = df['Age'].mean()
+print("\nСередній вік автомобілів:", average_age)
+
+# Максимальна загальна вартість
+max_total_value = df['Total Value'].max()
+print("Максимальна загальна вартість:", max_total_value)
+
+# Кількість унікальних моделей
+unique_models = df.index.nunique()
+print("Кількість унікальних моделей:", unique_models)
+
+
+
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Завантаження CSV-файлу
+df = pd.read_csv("comptagevelo2013.csv")
+
+#  Перевірка основних характеристик датафрейму
+print("Перші рядки таблиці:")
+print(df.head())
+
+print("\nІнформація про датафрейм:")
+print(df.info())
+
+print("\nОписова статистика:")
+print(df.describe())
+# Конвертація колонки дати
+df["Date"] = pd.to_datetime(df["Date"])
+df["Month"] = df["Date"].dt.month
+
+# Вибір тільки числових колонок (велодоріжок)
+bike_cols = df.select_dtypes(include="number").columns.drop("Month")
+
+# Загальна кількість велосипедистів за рік
+total_all = df[bike_cols].sum().sum()
+
+# Загальна кількість по кожній велодоріжці
+total_per_lane = df[bike_cols].sum()
+
+# Популярні місяці для вибраних трьох велодоріжок
+selected_lanes = ["Berri1", "Maisonneuve_1", "Parc"]
+popular_months = df.groupby("Month")[selected_lanes].sum().idxmax()
+
+print("Загальна кількість велосипедистів за рік:", total_all)
+print("\nКількість по кожній велодоріжці:\n", total_per_lane)
+print("\nНайпопулярніші місяці для вибраних велодоріжок:\n", popular_months)
+
+# Візьмемо велодоріжку Viger
+monthly_counts = df.groupby("Month")["Viger"].sum()
+
+plt.figure(figsize=(8, 5))
+plt.plot(monthly_counts.index, monthly_counts.values,color="red")
+plt.title("Завантаженість велодоріжки Viger по місяцях")
+plt.xlabel("Місяць")
+plt.ylabel("Кількість велосипедистів")
+plt.xticks(range(1, 13))
+plt.grid(True)
+plt.show()
+
+
+
+
+import matplotlib.pyplot as plt
+from collections import Counter
+from nltk.corpus import stopwords
+import string
+import nltk
+
+nltk.download('stopwords', quiet=True)
+# Функція рахує кількість слів
+def count_words(words):
+    return len(words)
+
+def most_used_words(words):
+    k_words = Counter(words)
+    cort = k_words.most_common(10)
+
+    x = [cort[i][0] for i in range(len(cort))]
+    y = [cort[i][1] for i in range(len(cort))]
+    # Гістограма
+    plt.bar(x, y, color='red')
+    plt.title("10 найбільш вживаних слів у тексті")
+    plt.xlabel("Слова")
+    plt.ylabel("Кількість")
+    plt.show()
+
+# Функція фільтрує пунктуацію та стоп-слова, а потім показує топ 10
+def most_used_words_clear_text(words):
+    stops = set(stopwords.words('english'))
+    clean_words = [w.lower() for w in words if w not in string.punctuation and w.lower() not in stops]
+    most_used_words(clean_words)
+
+def simple_t(text):
+    # Заміна пунктуації на пробіли
+    translator = str.maketrans(string.punctuation, ' '*len(string.punctuation))
+    text = text.translate(translator)
+    words = text.split()
+    return words
+
+# Читання файлу
+file_path = "edgeworth-parents.txt"
+try:
+    with open(file_path, "r", encoding="utf-8") as f:
+        text = f.read()
+    print(f"Файл '{file_path}' успішно прочитано.")
+except FileNotFoundError:
+    print(f"Помилка: файл '{file_path}' не знайдено.")
+    text = ""
+
+if text:
+    words = simple_t(text)
+    print("Кількість слів у тексті =", count_words(words))
+    most_used_words(words)
+    most_used_words_clear_text(words)
