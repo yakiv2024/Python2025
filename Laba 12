@@ -1,0 +1,229 @@
+# Програма для обробки даних продажів з Excel
+
+import os
+import pandas as pd
+import matplotlib.pyplot as plt
+from openpyxl import load_workbook
+from openpyxl.styles import Font
+
+
+# Читання Excel-файлу
+def read_data(path: str) -> pd.DataFrame:
+    print(" Читання даних з файлу")
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Файл '{path}' не знайдено.")
+
+    df = pd.read_excel(path)
+
+    if df.empty:
+        raise ValueError("Файл порожній або не містить даних.")
+
+    print(" Дані успішно прочитано")
+    return df
+
+
+# Очищення даних
+def clean_data(df: pd.DataFrame) -> pd.DataFrame:
+    print(" Очищення та підготовка даних")
+    df = df.copy()
+    df.columns = df.columns.str.strip()
+    df = df.dropna(how="all")
+
+    if "Sales" not in df.columns:
+        raise KeyError("Відсутній стовпець 'Sales'.")
+
+    df["Sales"] = pd.to_numeric(df["Sales"], errors="coerce")
+    df = df.dropna(subset=["Sales"])
+    print(" Очищення завершено")
+    return df
+
+
+# Допоміжна функція застосувати один фільтр до DataFrame
+def apply_single_filter(df: pd.DataFrame, column: str, value: str) -> pd.DataFrame:
+    temp = df.copy()
+    temp[column] = temp[column].astype(str).str.strip()
+
+    # спроба числового порівняння
+    try:
+        numeric_value = float(value)
+        filtered = temp[temp[column].astype(float) == numeric_value]
+        if not filtered.empty:
+            return filtered
+    except Exception:
+        pass
+
+    # текстове порівняння 
+    filtered = temp[temp[column].str.lower() == value.lower().strip()]
+    return filtered
+
+def multi_filter(df: pd.DataFrame, filters) -> pd.DataFrame:
+    filtered = df.copy()
+    print(" Застосування фільтрів:")
+    for column, value in filters:
+        print(f"  Фільтр: {column} = {value}")
+        filtered = apply_single_filter(filtered, column, value)
+    return filtered
+
+
+# Збір кількох фільтрів з перевіркою значень
+def ask_multi_filters(df: pd.DataFrame):
+    print("\nДоступні стовпці для фільтрації:")
+    for col in df.columns:
+        print(f"- {col}")
+
+    while True:
+        try:
+            n = int(input("Скільки фільтрів застосувати? ").strip())
+            if n < 1:
+                print("Потрібно вказати хоча б один фільтр.")
+                continue
+            break
+        except ValueError:
+            print("Введіть ціле число.")
+
+    filters = []
+    current_df = df.copy()  
+
+    for i in range(n):
+        print(f"\nФільтр №{i + 1}")
+
+        # вибір стовпця
+        while True:
+            column = input("Введіть назву стовпця: ").strip()
+            if column in current_df.columns:
+                break
+            print("Помилка: такого стовпця немає. Спробуйте ще раз.")
+
+        # вибір значення з перевіркою
+        while True:
+            value = input("Введіть значення: ").strip()
+            test_filtered = apply_single_filter(current_df, column, value)
+            if test_filtered.empty:
+                print("Такого значення у поточних даних немає, введіть інше.")
+            else:
+                filters.append((column, value))
+                current_df = test_filtered
+                break
+
+    return filters
+
+
+# Вибір стовпця для сортування
+def ask_sort_column(df: pd.DataFrame) -> str:
+    print("\nДоступні стовпці для сортування:")
+    for col in df.columns:
+        print(f"- {col}")
+
+    while True:
+        column = input("Введіть назву стовпця для сортування: ").strip()
+        if column in df.columns:
+            return column
+        print("Помилка: стовпець не знайдено.")
+
+
+# Сортування
+def sort_data(df: pd.DataFrame, column: str, ascending: bool = False) -> pd.DataFrame:
+    print(f" Сортування за '{column}'...")
+    return df.sort_values(by=column, ascending=ascending)
+
+
+# Аналіз (сума продажів по регіонах)
+def analyze_data(df: pd.DataFrame) -> pd.DataFrame:
+    grouped = df.groupby("Region", as_index=False)["Sales"].sum()
+    grouped = grouped.rename(columns={"Sales": "TotalSales"})
+    return grouped
+
+
+# Створення графіка
+def plot_sales(df_summary: pd.DataFrame, path: str, title: str):
+    if df_summary.empty:
+        print(f" Немає даних для побудови графіка: {title}")
+        return
+
+    plt.figure(figsize=(8, 5))
+    plt.bar(df_summary["Region"], df_summary["TotalSales"])
+    plt.title(title)
+    plt.xlabel("Регіон")
+    plt.ylabel("Сумарні продажі")
+    plt.tight_layout()
+    plt.show()
+    plt.savefig(path)
+    plt.close()
+    print(f" Графік збережено у файл: {path}")
+
+
+# Збереження у Excel з форматуванням
+def save_results_to_excel(df_filtered, df_summary, path):
+    print(" Збереження результатів у Excel.")
+    with pd.ExcelWriter(path, engine="openpyxl") as writer:
+        df_filtered.to_excel(writer, sheet_name="Filtered", index=False)
+        df_summary.to_excel(writer, sheet_name="Summary", index=False)
+
+    wb = load_workbook(path)
+    for sheet_name in wb.sheetnames:
+        ws = wb[sheet_name]
+        for cell in ws[1]:
+            cell.font = Font(bold=True, color="000080")
+    wb.save(path)
+    print(" Excel-файл збережено.")
+
+
+# Головна програма
+def main():
+    print(" Програма обробки даних продажів з Excel ")
+
+    file_path = input("Введіть шлях до Excel-файлу: ").strip()
+    if file_path == "":
+        file_path = "sales.xlsx"
+
+    try:
+        df = read_data(file_path)
+        df = clean_data(df)
+
+        print("\nПерші рядки даних:")
+        print(df.head())
+
+        filters = ask_multi_filters(df)
+        df_filtered = multi_filter(df, filters)
+
+        if df_filtered.empty:
+            print("Після фільтрації дані відсутні.")
+            return
+
+        print("\nВідфільтровані дані:")
+        print(df_filtered.head())
+
+        # сортування
+        sort_column = ask_sort_column(df_filtered)
+        df_sorted = sort_data(df_filtered, sort_column)
+
+        print("\nВідсортовані дані:")
+        print(df_sorted.head())
+
+        # аналіз
+        df_summary_filtered = analyze_data(df_sorted)
+        df_summary_all = analyze_data(df)
+
+        print("\nПідсумкові продажі по фільтрованих даних:")
+        print(df_summary_filtered)
+
+        print("\nПідсумкові продажі по всіх даних:")
+        print(df_summary_all)
+
+        plot_sales(df_summary_all, "chart_all.png", "Сумарні продажі по всіх даних")
+
+        # збереження результатів
+        save_results_to_excel(df_sorted, df_summary_filtered, "results.xlsx")
+        df_sorted.to_csv("results.csv", index=False, encoding="utf-8-sig")
+
+        print("\nРоботу завершено успішно.")
+        print("- results.xlsx")
+        print("- results.csv")
+        print("- chart_all.png")
+
+    except Exception as e:
+        print(f"Помилка виконання: {e}")
+
+
+if __name__ == "__main__":
+    main()
